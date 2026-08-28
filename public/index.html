@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1"
+>
+
+<title>Fingerprint Manager</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#fff;
+color:#202124;
+}
+
+.header{
+height:72px;
+border-bottom:1px solid #dadce0;
+display:flex;
+align-items:center;
+padding:0 30px;
+}
+
+.google{
+font-size:28px;
+font-weight:600;
+letter-spacing:-1px;
+}
+
+.google span:nth-child(1){color:#4285f4}
+.google span:nth-child(2){color:#ea4335}
+.google span:nth-child(3){color:#fbbc05}
+.google span:nth-child(4){color:#4285f4}
+.google span:nth-child(5){color:#34a853}
+.google span:nth-child(6){color:#ea4335}
+
+.container{
+max-width:1000px;
+margin:40px auto;
+padding:20px;
+}
+
+.card{
+background:#fff;
+border:1px solid #dadce0;
+border-radius:18px;
+padding:30px;
+box-shadow:0 3px 12px rgba(60,64,67,.12);
+}
+
+h1{
+margin-top:0;
+font-size:30px;
+font-weight:400;
+}
+
+.subtitle{
+color:#5f6368;
+}
+
+.notice{
+background:#f8f9fa;
+border-radius:12px;
+padding:15px;
+margin:20px 0;
+color:#5f6368;
+line-height:1.5;
+}
+
+input{
+width:100%;
+padding:15px;
+border:1px solid #dadce0;
+border-radius:8px;
+font-size:16px;
+outline:none;
+}
+
+input:focus{
+border:2px solid #1a73e8;
+padding:14px;
+}
+
+button{
+border:0;
+border-radius:8px;
+padding:13px 20px;
+font-size:15px;
+cursor:pointer;
+margin-top:12px;
+}
+
+.primary{
+background:#1a73e8;
+color:white;
+}
+
+.primary:hover{
+background:#185abc;
+}
+
+.secondary{
+background:#f1f3f4;
+color:#202124;
+}
+
+.danger{
+background:#fce8e6;
+color:#c5221f;
+}
+
+.identity{
+margin-top:25px;
+padding:20px;
+background:#f8f9fa;
+border-radius:12px;
+}
+
+.identity div{
+margin:8px 0;
+word-break:break-all;
+}
+
+.label{
+font-weight:bold;
+}
+
+.status{
+margin-top:15px;
+font-weight:bold;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:25px;
+}
+
+th,td{
+padding:14px 8px;
+border-bottom:1px solid #eee;
+text-align:left;
+vertical-align:top;
+}
+
+th{
+color:#5f6368;
+font-size:13px;
+}
+
+.id{
+font-family:monospace;
+font-size:12px;
+word-break:break-all;
+}
+
+.empty{
+text-align:center;
+padding:30px;
+color:#777;
+}
+
+@media(max-width:700px){
+
+.container{
+margin:15px auto;
+padding:10px;
+}
+
+.card{
+padding:20px;
+}
+
+table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
+}
+
+.header{
+padding:0 20px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header class="header">
+
+<div class="google">
+<span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+</div>
+
+</header>
+
+<main class="container">
+
+<div class="card">
+
+<h1>Fingerprint Visitor Manager</h1>
+
+<p class="subtitle">
+Identify this browser and save it with a name.
+</p>
+
+<div class="notice">
+
+<strong>Privacy note:</strong><br>
+
+This uses Fingerprint's visitor identification technology.
+It does not access or store a person's physical fingerprint.
+
+</div>
+
+<input
+id="name"
+placeholder="Enter person's name"
+autocomplete="off"
+>
+
+<br>
+
+<button
+class="primary"
+onclick="identify()"
+>
+Detect Visitor
+</button>
+
+<button
+class="secondary"
+onclick="loadVisitors()"
+>
+Refresh
+</button>
+
+<div class="identity">
+
+<div>
+<span class="label">Visitor ID:</span>
+<span id="visitorId">Not detected</span>
+</div>
+
+<div>
+<span class="label">Event ID:</span>
+<span id="eventId">Not detected</span>
+</div>
+
+</div>
+
+<button
+class="primary"
+onclick="saveVisitor()"
+>
+Save This Visitor
+</button>
+
+<div
+id="status"
+class="status"
+></div>
+
+<hr style="
+border:0;
+border-top:1px solid #eee;
+margin:35px 0;
+">
+
+<h2>Saved Visitors</h2>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Visitor ID</th>
+<th>Date</th>
+<th></th>
+</tr>
+
+</thead>
+
+<tbody id="visitorList">
+
+<tr>
+<td
+colspan="4"
+class="empty"
+>
+Loading...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+<br>
+
+<button
+class="danger"
+onclick="deleteAll()"
+>
+Delete All Visitors
+</button>
+
+</div>
+
+</main>
+
+<script type="module">
+
+const fpPromise =
+import(
+"https://fpjscdn.net/v4/GgBZD8aoXRN6bW5FGlTI"
+)
+.then(Fingerprint =>
+Fingerprint.start({
+region:"eu"
+})
+);
+
+let currentVisitorId = null;
+let currentEventId = null;
+
+async function identify(){
+
+setStatus("Detecting visitor...");
+
+try{
+
+const fp =
+await fpPromise;
+
+const result =
+await fp.get();
+
+currentVisitorId =
+result.visitorId ||
+result.visitor_id;
+
+currentEventId =
+result.eventId ||
+result.event_id ||
+result.requestId;
+
+document.getElementById(
+"visitorId"
+).textContent =
+currentVisitorId || "Unavailable";
+
+document.getElementById(
+"eventId"
+).textContent =
+currentEventId || "Unavailable";
+
+setStatus(
+"Visitor detected successfully."
+);
+
+}catch(error){
+
+console.error(error);
+
+setStatus(
+"Could not identify this visitor."
+);
+
+}
+
+}
+
+async function saveVisitor(){
+
+const name =
+document.getElementById(
+"name"
+).value.trim();
+
+if(!name){
+
+alert("Enter a name first.");
+
+return;
+
+}
+
+if(!currentVisitorId){
+
+await identify();
+
+}
+
+if(!currentVisitorId){
+
+return;
+
+}
+
+setStatus("Saving visitor...");
+
+try{
+
+const response =
+await fetch(
+"/api/visitors",
+{
+method:"POST",
+headers:{
+"Content-Type":
+"application/json"
+},
+body:JSON.stringify({
+
+name:name,
+
+visitorId:
+currentVisitorId,
+
+eventId:
+currentEventId
+
+})
+}
+);
+
+const data =
+await response.json();
+
+if(!response.ok){
+
+throw new Error(
+data.error ||
+"Save failed"
+);
+
+}
+
+document.getElementById(
+"name"
+).value="";
+
+setStatus(
+"Visitor saved successfully."
+);
+
+loadVisitors();
+
+}catch(error){
+
+console.error(error);
+
+setStatus(
+"Could not save visitor."
+);
+
+}
+
+}
+
+async function loadVisitors(){
+
+try{
+
+const response =
+await fetch(
+"/api/visitors"
+);
+
+const visitors =
+await response.json();
+
+const list =
+document.getElementById(
+"visitorList"
+);
+
+if(!visitors.length){
+
+list.innerHTML=`
+<tr>
+<td colspan="4" class="empty">
+No visitors saved yet.
+</td>
+</tr>
+`;
+
+return;
+
+}
+
+list.innerHTML =
+visitors.map(visitor => `
+
+<tr>
+
+<td>
+<strong>
+${escapeHTML(visitor.name)}
+</strong>
+</td>
+
+<td class="id">
+${escapeHTML(visitor.visitor_id)}
+</td>
+
+<td>
+${new Date(
+visitor.created_at
+).toLocaleString()}
+</td>
+
+<td>
+
+<button
+class="danger"
+onclick="deleteVisitor(${visitor.id})"
+>
+Delete
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+}catch(error){
+
+console.error(error);
+
+document.getElementById(
+"visitorList"
+).innerHTML=`
+<tr>
+<td colspan="4" class="empty">
+Unable to load visitors.
+</td>
+</tr>
+`;
+
+}
+
+}
+
+async function deleteVisitor(id){
+
+if(!confirm(
+"Delete this visitor?"
+)) return;
+
+await fetch(
+"/api/visitors/"+id,
+{
+method:"DELETE"
+}
+);
+
+loadVisitors();
+
+}
+
+async function deleteAll(){
+
+if(!confirm(
+"Delete ALL saved visitors?"
+)) return;
+
+await fetch(
+"/api/visitors",
+{
+method:"DELETE"
+}
+);
+
+loadVisitors();
+
+}
+
+function setStatus(text){
+
+document.getElementById(
+"status"
+).textContent=text;
+
+}
+
+function escapeHTML(value){
+
+return String(value)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+}
+
+window.identify=identify;
+window.saveVisitor=saveVisitor;
+window.loadVisitors=loadVisitors;
+window.deleteVisitor=deleteVisitor;
+window.deleteAll=deleteAll;
+
+loadVisitors();
+identify();
+
+</script>
+
+</body>
+
+</html>
