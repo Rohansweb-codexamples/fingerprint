@@ -1,17 +1,12 @@
-```json
 {
   "name": "fingerprint-manager",
   "version": "1.0.0",
-  "description": "Fingerprint visitor manager running on Render",
+  "description": "Fingerprint visitor manager",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
-  },
-  "engines": {
-    "node": "22.x"
   },
   "dependencies": {
     "express": "^5.1.0"
   }
 }
-```
